@@ -25,7 +25,7 @@ def pick_several_from_array(arr: npt.NDArray, size: int = 1, replace: bool = Tru
 def pick_from_array(arr: npt.NDArray):
     """
     Picks one randomly chosen element from the first dimension of the array.
-    This is a short cut for *pick_several_from_array(arr, size=1).
+    This is a short cut for *pick_several_from_array(arr, size=1)[0].
 
     arr:
     An array.
@@ -33,4 +33,4 @@ def pick_from_array(arr: npt.NDArray):
     returns:
     A first-dimension element from the array.
     """
-    return pick_several_from_array(arr)
+    return pick_several_from_array(arr)[0]

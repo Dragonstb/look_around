@@ -32,15 +32,15 @@ _cd_grammar = {
     '*BGa': [
         ['*BRa', '*BA', '*BI', 'for'],
         ['*BRa', '*BI', 'for'],
-        ['revolutionizing']
+        ['revolutionize']
     ],
     '*BT': [
         ['the use of {fields}'],
     ],
     '*CA': [['innovative'], ['family-led'], ['small'], ['large'], ['leading'], ['ambitious'], ['encouraged'], ['the leading']],
     '*C': [['company'], ['start up']],
-    '*CH': [['the market leader'], ['the number one'], ['the largest'], ['one of the largest players']],
-    '*BR': [['providing'], ['offering'], ['coming up with']],
+    '*CH': [['the market leader'], ['the number one company'], ['the largest company'], ['one of the largest players']],
+    '*BR': [['are providing'], ['are offering'], ['are coming up with']],
     '*BRa': [['provide'], ['offer'], ['come up with']],
     '*BA': [['novel'], ['smart'], ['outstanding'], ['innovative']],
     '*BI': [['ideas'], ['solutions'], ['products'], ['services']],
@@ -131,5 +131,5 @@ def gen_company_desc(company_name: str) -> str:
 
 # _______________  interactive tests  _______________
 
-def test_comp_desc():
+def _test_comp_desc():
     return gen_company_desc('Look Around SE')
