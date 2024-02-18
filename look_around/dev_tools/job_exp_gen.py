@@ -18,7 +18,7 @@ class JobExpGen:
     def __init__(self) -> None:
         self.rand = np.random.default_rng()
 
-    def genExperienceLine(self, skill_targets: npt.NDArray[np.string_]) -> str:
+    def gen_experience_line(self, skill_targets: npt.NDArray[np.str_]) -> str:
         """
         Generates a line describing a job requirement or an expected experience in
         or knowledge about a certain topic/entity.
@@ -84,4 +84,4 @@ class JobExpGen:
     def _test_experience(self):
         arr = np.array(['RPG', 'Video Games', 'Console Games',
                        'Board Games', 'Card Games', 'Computer Games'])
-        return self.genExperienceLine(arr)
+        return self.gen_experience_line(arr)

@@ -15,7 +15,7 @@ _stems = np.array([
     'Herberts', 'Harriets', 'Charles', 'Charlottes',
 
     'Black', 'Red', 'Green', 'Blue', 'Yellow', 'Orange', 'Cyan', 'Magenta', 'Purple', 'Azure', 'Brown', 'Lime',
-    'Sky', 'Tan', 'Violet',
+    'Sky', 'Tan', 'Violet', 'White'
 
     'Ants', 'Mantis', 'Bees', 'Wasps', 'Hornets', 'Bugs', 'Butterflys', 'Moth', 'Pillars'
 
@@ -28,17 +28,17 @@ _stems = np.array([
 
     'Quaint', 'Pleasant', 'Peace', 'Harmony', 'Heavens',
 
-    'Cloud', 'Sunny', 'Rain', 'Thunder', 'Storm',
+    'Cloud', 'Sun', 'Rain', 'Thunder', 'Storm',
 
     'Kings', 'Queens', 'Barons', 'Baroness', 'Dukes', 'Duchess', 'Presidents', 'Majors', 'Officers'
 ])
 _suffixes = np.array([
     'springs', 'peak', 'port', ' Mountain', ' Valley', 'burgh', 'fort', 'mouth', ' Harbour', 'bay', 'shire',
-    'coast', 'cliffs', 'hills', 'plains', 'ville', 'town', 'let', 'forest', 'woods', ' Mill', 'smith', 'point',
-    'shore', ' Beach', 'river', 'bridge', ' Edge'
+    'coast', 'cliffs', ' Hills', 'plains', 'ville', 'town', 'let', 'forest', 'woods', ' Mill', 'smith', 'point',
+    'shore', ' Beach', 'river', 'bridge', ' Edge', ' Crossing'
 ])
 _prefixes = np.array([
-    'Point', 'Port', 'New', 'Peak', 'Little'
+    'Point', 'Port', 'New', 'Peak', 'Little', 'Rocky', 'Sandy', 'Windy', 'Sunny', 'Silent'
 ])
 
 
