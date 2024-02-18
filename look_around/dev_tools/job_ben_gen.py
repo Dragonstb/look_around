@@ -17,7 +17,7 @@ class JobBenGen:
     def __init__(self) -> None:
         self.rand = np.random.default_rng()
 
-    def gen_benefits(self, min: int, max: int) -> npt.NDArray:
+    def gen_benefits(self, min: int, max: int) -> npt.NDArray[np.str_]:
         numAvailableBenefits = 13
         rolls = self.rand.random(size=numAvailableBenefits)
         allBens = []
@@ -75,6 +75,7 @@ class JobBenGen:
         arr = np.array(allBens)
         numBenefits = self.rand.integers(
             min, 1+np.min([numAvailableBenefits, max]))
+
         return utils.pick_several_from_array(arr, size=numBenefits, replace=False)
 
     def _test_gen(self, count: int = 4):

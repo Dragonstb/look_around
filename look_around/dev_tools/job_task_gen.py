@@ -1,8 +1,7 @@
 import numpy as np
 
 _grammar = {
-    '*start': [['you will', '*statement']],
-    '*statement': [
+    '*start': [
         ['*setup', '*obj_and_empty', '*projects', '*target'],
         ['*setup', '*obj_and_empty', '*databases', '*target'],
         ['*setup', '*obj', '*programs', '*target'],
