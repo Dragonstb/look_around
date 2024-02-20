@@ -5,8 +5,8 @@ import utils
 # experience discriminators
 _min_quantifiers = np.array(['at least', 'minimum', 'not less than'])
 _qualifiers = np.array(['first', 'profound', 'sound'])
-_numbers = np.array(['one', 'two', 'three', 'four',
-                     'five', 'six', 'seven', 'eight', 'nine'])
+_numbers = np.array(['one', 'one', 'one', 'one', 'two', 'two', 'two', 'three', 'three', 'three', 'four', 'four', 'five',
+                     'five', 'six', 'six', 'seven', 'eight', 'nine'])
 _xp = np.array(['experience in', 'knowledge of'])
 
 
