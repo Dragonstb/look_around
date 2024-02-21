@@ -252,6 +252,9 @@ class AlgorithmicCategorizer:
         self.category += mod
         self.reasons[f'mods: {self.pos_mods} vs {self.neg_mods}'] = mod
 
+    def get_category(self) -> int:
+        return self.category
+
     def find_substring(self, start: str, end: str) -> str:
         startIdx = self.observed.find(start)
         if startIdx == -1:

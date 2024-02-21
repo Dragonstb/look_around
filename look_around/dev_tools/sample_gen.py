@@ -35,5 +35,11 @@ class SampleGen:
         if print_ranking:
             self.ac.print()
 
+    def get_req(self) -> str:
+        return self.rg.get_html()
+
+    def get_rating(self) -> int:
+        return self.ac.get_category()
+
     def print_towns(self) -> None:
         print(self.towns)
