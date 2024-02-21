@@ -1,5 +1,4 @@
 import pandas as pd
-import math
 
 _Data_Eng = 'Data Engineer'.lower()
 _Data_Sci = 'Data Scientist'.lower()

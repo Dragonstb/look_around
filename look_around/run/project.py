@@ -48,9 +48,9 @@ class Project():
         self.sample_counter += 1
 
         id = ''.join(utils.pick_several_from_array(_chars, 6))
-        id = '-'.join([id, str(self.sample_counter)])
+        id = '_'.join([id, str(self.sample_counter)])
         dir = str(self.sample_counter//300)
         if len(dir) < 4:
             dir = ''.join([str(0) for _ in range(4-len(dir))]) + dir
 
-        return {'id': id, 'path': '/'.join([dir, id])}
+        return {'id': id, 'path': '/'.join([dir, id]), 'dir': dir}
