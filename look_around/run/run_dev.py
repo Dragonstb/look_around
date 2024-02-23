@@ -47,7 +47,7 @@ def create_dev_project(size: int, name: str, parent: Path):
                 file.write(prepared)
         except BaseException as be:
             print(be)
-            prep_sub_path = None  # write None instead of the sub path
+            prep_sub_path = pd.NA  # write NA instead of the sub path
 
         # add to data collection if writing has succeeded
         if ok:

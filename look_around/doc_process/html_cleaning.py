@@ -21,12 +21,18 @@ def clean_html(html: str) -> str:
             r'<[/]{0,1}hr.*?>', r'<[/]{0,1}wbr.*?>', r'<[/]{0,1}meta.*?>']
     for ex in list:
         while re.search(ex, text) is not None:
-            text = re.sub(ex, '', text)
+            text = re.sub(ex, ' ', text)
 
     # remove tags that come in a pair, while keeping what is between the opening
     # and the closing tag
-    pattern = r'<([^\W]+)[^>]*>((.|\n)*?)</\1>'
+    pattern = r'<(\w+)[^>]*>((.|\n)*?)</\1>'
     while re.search(pattern, text) is not None:
-        text = re.sub(pattern, r'\2', text)
+        text = re.sub(pattern, r' \2 ', text)
 
-    return text
+    # remove punctuation, replace by space for ensuring the separation of words
+    text = re.sub(r'[^ \w]', ' ', text)
+
+    # clean multiple white spaces that were introduced when they replaced the html tags
+    text = re.sub(r'\s{2,}', ' ', text)
+
+    return text.strip()
