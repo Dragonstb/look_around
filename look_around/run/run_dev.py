@@ -3,6 +3,7 @@ from look_around.run import run_gen
 import pandas as pd
 from look_around.dev_tools.sample_gen import SampleGen as SG
 from look_around.doc_process import html_cleaning, stemming
+from sklearn.model_selection import train_test_split
 
 
 def create_dev_project(size: int, name: str, parent: Path):
@@ -64,7 +65,21 @@ def create_dev_project(size: int, name: str, parent: Path):
             successes += 1
 
     print(f'wrote {successes} out of {size} files successfully')
-    if len(file_data) > 0:
-        file_data = pd.concat(file_data)
-        file_data.to_csv(Path(prj.train_dir, 'document_index.csv'), index=True)
-        print(file_data)
+
+    if len(file_data) < 1:
+        return
+
+    # concat to single data frame
+    file_data = pd.concat(file_data)
+
+    # split to training data and test data
+    clean = file_data.dropna()
+    train, test = train_test_split(
+        clean.index, test_size=0.2, stratify=clean['rating'])
+    file_data.loc[train, 'usage'] = 'train'
+    file_data.loc[test, 'usage'] = 'test'
+
+    # out
+    file_data.to_csv(Path(prj.train_dir, 'document_index.csv'), index=True)
+    print()
+    print(file_data)
