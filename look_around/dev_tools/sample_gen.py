@@ -1,6 +1,6 @@
-from dev_tools.req_gen import ReqGen as RG
-from dev_tools.alg_cat import AlgorithmicCategorizer as AC
-import dev_tools.town_gen as tg
+from look_around.dev_tools.req_gen import ReqGen as RG
+from look_around.dev_tools.alg_cat import AlgorithmicCategorizer as AC
+import look_around.dev_tools.town_gen as tg
 import pandas as pd
 import numpy as np
 

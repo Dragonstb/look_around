@@ -1,7 +1,8 @@
 from pathlib import Path
-from run import run_gen
+from look_around.run import run_gen
 import pandas as pd
-from dev_tools.sample_gen import SampleGen as SG
+from look_around.dev_tools.sample_gen import SampleGen as SG
+from look_around.doc_process import html_cleaning
 
 
 def create_dev_project(size: int, name: str, parent: Path):
@@ -20,11 +21,12 @@ def create_dev_project(size: int, name: str, parent: Path):
         html = sg.get_req()
         rating = sg.get_rating()
         id = prj.create_sample_id()
-        sub_path = Path(id['path'] + '-raw.html')
+        raw_sub_path = Path(id['path'] + '-raw.html')
+        prep_sub_path = Path(id['path'] + '-cleaned.txt')
         sub_dir = Path(train_dir, id['dir'])
 
         # write html file to disc
-        full_path = Path(train_dir, sub_path)
+        full_path = Path(train_dir, raw_sub_path)
         sub_dir.mkdir(exist_ok=True, parents=True)
         try:
             with open(full_path, 'wt', ) as file:
@@ -34,10 +36,21 @@ def create_dev_project(size: int, name: str, parent: Path):
             print(be)
             ok = False
 
-        # add to data collection if wtiting has succeeded
+        # generate preprocessed and prepared document
+        prepared = html_cleaning.clean_html(html)
+        full_path = Path(train_dir, prep_sub_path)
+        try:
+            with open(full_path, 'wt', ) as file:
+                file.write(prepared)
+        except BaseException as be:
+            print(be)
+            prep_sub_path = None  # write None instead of the sub path
+
+        # add to data collection if writing has succeeded
         if ok:
             dic = {
-                'raw file': str(sub_path),
+                'raw file': str(raw_sub_path),
+                'prepared file': str(prep_sub_path),
                 'origin': 'req_gen',
                 'rating': rating,
                 'labeled by': 'alg_cat'

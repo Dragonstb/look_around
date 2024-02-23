@@ -1,6 +1,6 @@
 from pathlib import Path
 import numpy as np
-import dev_tools.utils as utils  # TODO: shift file to higher directory
+import look_around.dev_tools.utils as utils  # TODO: shift file to higher directory
 from typing import Dict
 
 _train_dir = 'training'

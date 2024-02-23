@@ -1,10 +1,10 @@
 import numpy as np
 import numpy.typing as npt
-from dev_tools import company_gen
-from dev_tools.job_exp_gen import JobExpGen as JEG
-from dev_tools.job_task_gen import JobTaskGen as JTG
-from dev_tools.job_ben_gen import JobBenGen as JBG
-from dev_tools import utils
+from look_around.dev_tools import company_gen
+from look_around.dev_tools.job_exp_gen import JobExpGen as JEG
+from look_around.dev_tools.job_task_gen import JobTaskGen as JTG
+from look_around.dev_tools.job_ben_gen import JobBenGen as JBG
+from look_around.dev_tools import utils
 
 _exp_headers = np.array([
     'Required experience:',

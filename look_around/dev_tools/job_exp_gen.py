@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.typing as npt
-from dev_tools import utils
+from look_around.dev_tools import utils
 
 # experience discriminators
 _min_quantifiers = np.array(['at least', 'minimum', 'not less than'])
