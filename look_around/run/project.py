@@ -1,6 +1,8 @@
 from pathlib import Path
 import numpy as np
-import look_around.dev_tools.utils as utils  # TODO: shift file to higher directory
+import numpy.typing as npt
+# TODO: shift file to higher directory
+import look_around.dev_tools.utils as utils
 from typing import Dict
 
 _train_dir = 'training'
@@ -54,3 +56,14 @@ class Project():
             dir = ''.join([str(0) for _ in range(4-len(dir))]) + dir
 
         return {'id': id, 'path': '/'.join([dir, id]), 'dir': dir}
+
+    def write_vocab(self, vocab: npt.NDArray[np.str_], name: str) -> None:
+        full_path = Path(self.root_dir, f'{name}.txt')
+        try:
+            with open(full_path, 'wt') as file:
+                for word in vocab:
+                    file.write(word+'\n')
+        except BaseException as be:
+            print(f'could not write vocabulary {name}.txt')
+            print(be)
+        # vocab.tofile(Path(self.root_dir, name, '.txt'),)
