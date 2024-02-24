@@ -75,17 +75,17 @@ def create_dev_project(size: int, name: str, parent: Path):
     # concat to single data frame
     file_data = pd.concat(file_data)
 
-    # determine two vocabulary
-    print('number of docs: '+str(len(docs)))
-    vocab1 = vocab_extraction.extract_vocab(docs, min_df=3)
-    vocab2 = vocab_extraction.extract_vocab(docs, min_df=3, ngram_range=(2, 2))
-
     # split to training data and test data
     clean = file_data.dropna()
     train, test = train_test_split(
         clean.index, test_size=0.2, stratify=clean['rating'])
     file_data.loc[train, 'usage'] = 'train'
     file_data.loc[test, 'usage'] = 'test'
+
+    # determine two vocabulary
+    print('number of docs: '+str(len(docs)))
+    vocab1 = vocab_extraction.extract_vocab(docs, min_df=3)
+    vocab2 = vocab_extraction.extract_vocab(docs, min_df=3, ngram_range=(2, 2))
 
     # out
     file_data.to_csv(Path(prj.train_dir, 'document_index.csv'), index=True)
