@@ -88,7 +88,7 @@ def create_dev_project(size: int, name: str, parent: Path):
     vocab2 = vocab_extraction.extract_vocab(docs, min_df=3, ngram_range=(2, 2))
 
     # out
-    file_data.to_csv(Path(prj.train_dir, 'document_index.csv'), index=True)
+    prj.write_training_index(file_data)
     print()
     print(file_data)
 
