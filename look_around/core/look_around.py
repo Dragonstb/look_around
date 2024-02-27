@@ -7,6 +7,8 @@ import numpy.typing as npt
 import pandas as pd
 from look_around.tools import tools
 from scipy.sparse import spmatrix
+from look_around.run import run_dev
+from look_around.run import run_gen
 
 
 class LookAround():
@@ -43,6 +45,19 @@ class LookAround():
                 print(be)
 
             self.training_mode = True
+
+    def create_project(self, name: str) -> Project:
+        """
+        Creates a new project and its folders and sets it as the active one.
+
+        name:
+        Name of the project.
+
+        returns:
+        Instance of project
+        """
+        self.prj = run_gen.create_project_folders(name, self.home_path)
+        return self.prj
 
     def read_project(self, name: str) -> Project:
         """
@@ -84,9 +99,21 @@ class LookAround():
         self.test_samples = self.prj.read_test_samples(self.file_data)
         return (self.train_samples, self.test_samples)
 
-    def get_feature_labels(self) -> Tuple[spmatrix, pd.Series, spmatrix, pd.Series]:
+    def get_feature_labels(self, ngram_range: Tuple[int, int] = (1, 1)) -> Tuple[spmatrix, pd.Series, spmatrix, pd.Series]:
         self.train_data = tools.get_features_labels(
-            self.vocab, self.train_samples, self.file_data)
+            self.vocab, self.train_samples, self.file_data, ngram_range=ngram_range)
         self.test_data = tools.get_features_labels(
-            self.vocab, self.test_samples, self.file_data)
+            self.vocab, self.test_samples, self.file_data, ngram_range=ngram_range)
         return (self.train_data[0], self.train_data[1], self.test_data[0], self.test_data[1])
+
+    def make_dev_project(self, size: int, name: str) -> Project:
+        self.prj = run_dev.create_dev_project(size, name, self.home_path)
+        return self.prj
+
+    def get_current_project_name(self):
+        if self.prj is not None:
+            return self.prj.name
+        return None
+
+    def is_in_training_mode(self) -> bool:
+        return self.training_mode

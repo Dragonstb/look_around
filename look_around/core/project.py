@@ -1,9 +1,8 @@
 from pathlib import Path
 import numpy as np
 import numpy.typing as npt
-# TODO: shift file to higher directory
 import look_around.dev_tools.utils as utils
-from typing import Dict
+from typing import Dict, List
 import pandas as pd
 from look_around.tools import keys
 
@@ -33,9 +32,11 @@ class Project():
     """Directory with the data actually ised for predictions"""
     sample_counter: int
     rand = np.random.Generator
+    name: str
 
     def __init__(self, name: str, parent: Path) -> None:
         # TODO: check if writable / for already existing
+        self.name = name
         self.root_dir = Path(parent.absolute(), name)
         self.train_dir = Path(self.root_dir, _train_dir)
         self.model_dir = Path(self.root_dir, _model_dir)
@@ -159,7 +160,7 @@ class Project():
         idx = usage_idx & label_idx
         file_names = file_data.loc[idx, keys.PREP_FILE].dropna()
 
-        contents = []
+        contents: List[pd.Series] = []
         for idx in file_names.index:
             file_name = file_names.loc[idx]
             full_path = Path(self.train_dir, file_name)

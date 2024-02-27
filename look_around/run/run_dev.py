@@ -4,9 +4,10 @@ import pandas as pd
 from look_around.dev_tools.sample_gen import SampleGen as SG
 from look_around.doc_process import html_cleaning, stops_removal, stemming, vocab_extraction
 from sklearn.model_selection import train_test_split
+from look_around.core.project import Project
 
 
-def create_dev_project(size: int, name: str, parent: Path):
+def create_dev_project(size: int, name: str, parent: Path) -> Project:
     prj = run_gen.create_project_folders(name, parent)
     sg = SG()
     cols = []
@@ -70,7 +71,7 @@ def create_dev_project(size: int, name: str, parent: Path):
     print(f'wrote {successes} out of {size} files successfully')
 
     if len(file_data) < 1:
-        return
+        return prj
 
     # concat to single data frame
     file_data = pd.concat(file_data)
@@ -100,3 +101,5 @@ def create_dev_project(size: int, name: str, parent: Path):
     print()
     print('bigram vocabulary:')
     print(vocab2)
+
+    return prj
