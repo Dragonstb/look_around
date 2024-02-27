@@ -4,7 +4,7 @@ sys.path.append('..')
 sys.path.append('../..')
 sys.path.append('../../look_around')
 # autopep8: off
-from look_around.run.project import Project as Pro
+from look_around.core.project import Project as Pro
 # autopep8: on
 
 

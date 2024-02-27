@@ -1,5 +1,5 @@
 from pathlib import Path
-from look_around.run.project import Project
+from look_around.core.project import Project
 
 
 def create_project_folders(name: str, parent: Path) -> Project:
