@@ -24,7 +24,7 @@ class Project():
     """
     root_dir: Path
     """project directory"""
-    train_dir: Path
+    training_dir: Path
     """Directory containing training data"""
     model_dir: Path
     """directory for storing the models"""
@@ -38,7 +38,7 @@ class Project():
         # TODO: check if writable / for already existing
         self.name = name
         self.root_dir = Path(parent.absolute(), name)
-        self.train_dir = Path(self.root_dir, _train_dir)
+        self.training_dir = Path(self.root_dir, _train_dir)
         self.model_dir = Path(self.root_dir, _model_dir)
         self.data_dir = Path(self.root_dir, _data_dir)
         self.sample_counter = 0
@@ -99,7 +99,7 @@ class Project():
         file_data:
         Index list of sample files ffor training.
         """
-        full_path = Path(self.train_dir, _doc_index)
+        full_path = Path(self.training_dir, _doc_index)
         file_data.to_csv(full_path, index=True)
 
     def read_training_index(self) -> pd.DataFrame:
@@ -109,9 +109,71 @@ class Project():
         returns:
         Index list of sample data for training.
         """
-        full_path = Path(self.train_dir, _doc_index)
+        full_path = Path(self.training_dir, _doc_index)
         file_data = pd.read_csv(full_path, index_col=0)
         return file_data
+
+    def update_training_index(self, file_data: pd.DataFrame, write_on_update: bool = True) -> pd.DataFrame:
+        """
+        Looks for .html and .htm files in the training directory that have not been added to
+        the sample file index yet. The files found become listed in the index.
+
+        file_data:
+        The sample file index.
+
+        write_on_update:
+        If files have been added, write the file index to disc in the end.
+
+        returns:
+        The sample file index.
+        """
+        counter = 0
+        for subdir in self.training_dir.iterdir():
+            if subdir.is_file():
+                continue
+
+            counter += self._update_training_directory(
+                file_data, subdir, self.training_dir)
+        if counter > 0:
+            print(f'added {counter} files')  # TODO: localize info message
+            if write_on_update:
+                self.write_training_index(file_data)
+        else:
+            print('no new files')
+        return file_data
+
+    def _update_training_directory(self, file_data: pd.DataFrame, subdir: Path, modedir: Path) -> int:
+        """
+        Browses the 'subdir' for .htm and .html files. For any file found, it is checked if the
+        file is listed in the sample file index. If not, the file is added.
+
+        file_data:
+        The sample file index.
+
+        subdir:
+        The directory in that new files are looked for.
+
+        modedir:
+        The training directory or the data directory.
+
+        returns:
+        Number of files added to the index.
+        """
+        counter = 0
+        for file in subdir.glob('*.htm*'):
+            if not file.is_file():
+                continue
+            if not file.suffix == '.html' and not file.suffix == '.htm':
+                continue
+
+            file_path = str(file.relative_to(modedir))
+            idx = file_data[keys.RAW_FILE] == file_path
+            if not idx.any():
+                df = pd.DataFrame(
+                    {keys.RAW_FILE: file_path}, index=[file_path])
+                pd.concat([file_data, df])
+                counter += 1
+        return counter
 
     def read_train_samples(self, file_data: pd.DataFrame) -> pd.Series:
         """
@@ -163,7 +225,7 @@ class Project():
         contents: List[pd.Series] = []
         for idx in file_names.index:
             file_name = file_names.loc[idx]
-            full_path = Path(self.train_dir, file_name)
+            full_path = Path(self.training_dir, file_name)
             try:
                 with open(full_path, 'rt') as file:
                     content = file.read().strip()

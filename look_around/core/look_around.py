@@ -9,6 +9,8 @@ from look_around.tools import tools
 from scipy.sparse import spmatrix
 from look_around.run import run_dev
 from look_around.run import run_gen
+from look_around.tools import keys
+from look_around.doc_process import html_cleaning, stops_removal, stemming
 
 
 class LookAround():
@@ -98,6 +100,52 @@ class LookAround():
         self.train_samples = self.prj.read_train_samples(self.file_data)
         self.test_samples = self.prj.read_test_samples(self.file_data)
         return (self.train_samples, self.test_samples)
+
+    def prepare_unclean_samples(self, lang: str = 'english') -> None:
+        idx1 = self.file_data[keys.RAW_FILE].notna()
+        idx2 = self.file_data[keys.PREP_FILE].isna()
+        df = self.file_data[idx1 & idx2]
+        if self.training_mode:
+            root = self.prj.training_dir
+        else:
+            root = self.prj.data_dir
+        filecount = len(df)
+        counter = 1
+        for row in df.index:
+            print(f'\rpreprocessing file {counter} of {filecount}', end='')
+            raw_file = Path(root, df.loc[row, keys.RAW_FILE]).resolve()
+            prep_name = raw_file.stem + '-cleaned.txt'
+            prep_file = Path(root, raw_file.parent, prep_name)
+            self._prepare_unclean_sample(row, raw_file, prep_file, root, lang)
+            counter += 1
+
+    def _prepare_unclean_sample(self, row: str, raw_file: Path, prep_file: Path, root: Path, lang: str) -> None:
+        try:
+            with open(raw_file, 'rt') as raw:
+                lines = [line.strip() for line in raw.readlines()]
+                # join by space prevents two words merging into one
+                text = ' '.join(lines)
+        except BaseException as be:
+            print(f'cannot read raw sample file {str(raw_file)}:')
+            print(be)
+            return
+
+        use_lang = lang
+        # TODO: automatically determine language of text, or use existing value in
+        # column 'language' of self.file_data
+
+        prepared = html_cleaning.clean_html(text)
+        prepared = stops_removal.remove_stop_words(prepared, lang=lang)
+        prepared = stemming.stem(prepared, lang=lang)
+
+        try:
+            with open(prep_file, 'wt') as prep:
+                prep.write(prepared)
+                self.file_data.loc[row, keys.PREP_FILE] = str(
+                    prep_file.relative_to(root))
+        except BaseException as be:
+            print(f'cannot write {prep_file.name}:')
+            print(be)
 
     def get_feature_labels(self, ngram_range: Tuple[int, int] = (1, 1)) -> Tuple[spmatrix, pd.Series, spmatrix, pd.Series]:
         self.train_data = tools.get_features_labels(

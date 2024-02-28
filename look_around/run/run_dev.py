@@ -5,6 +5,7 @@ from look_around.dev_tools.sample_gen import SampleGen as SG
 from look_around.doc_process import html_cleaning, stops_removal, stemming, vocab_extraction
 from sklearn.model_selection import train_test_split
 from look_around.core.project import Project
+from look_around.tools import keys
 
 
 def create_dev_project(size: int, name: str, parent: Path) -> Project:
@@ -14,7 +15,7 @@ def create_dev_project(size: int, name: str, parent: Path) -> Project:
     file_data = []
     docs = []
     successes = 0
-    train_dir = Path(prj.root_dir, prj.train_dir).absolute()
+    train_dir = Path(prj.root_dir, prj.training_dir).absolute()
     print('writing to '+str(train_dir))
 
     for _ in range(size):
