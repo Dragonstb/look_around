@@ -44,6 +44,16 @@ class Project():
         self.sample_counter = 0
         self.rand = np.random.default_rng()
 
+    def make_missing_dirs(self) -> None:
+        """
+        Creates the directories of the project in the file system. Already existing
+        directories remain untouched.
+        """
+        dirs = [self.training_dir, self.model_dir, self.data_dir]
+        for dir in dirs:
+            if not dir.exists():
+                dir.mkdir(exist_ok=False, parents=True)
+
     def create_sample_id(self) -> Dict:
         """
         Creates an id for the sample and a core path that is included into the
@@ -107,10 +117,15 @@ class Project():
         Reads the training files index from disk. Does not take care of I/O errors!
 
         returns:
-        Index list of sample data for training.
+        Index list of sample data for training. A new, empty one is created if the file
+        does not exist.
         """
         full_path = Path(self.training_dir, _doc_index)
-        file_data = pd.read_csv(full_path, index_col=0)
+        if full_path.exists():
+            file_data = pd.read_csv(full_path, index_col=0)
+        else:
+            file_data = pd.DataFrame(
+                [], columns=[keys.RAW_FILE, keys.PREP_FILE])
         return file_data
 
     def update_training_index(self, file_data: pd.DataFrame, write_on_update: bool = True) -> pd.DataFrame:
@@ -132,8 +147,10 @@ class Project():
             if subdir.is_file():
                 continue
 
-            counter += self._update_training_directory(
+            new_files = self._update_training_directory(
                 file_data, subdir, self.training_dir)
+            counter += len(new_files)
+            file_data = pd.concat([file_data]+new_files)
         if counter > 0:
             print(f'added {counter} files')  # TODO: localize info message
             if write_on_update:
@@ -142,7 +159,7 @@ class Project():
             print('no new files')
         return file_data
 
-    def _update_training_directory(self, file_data: pd.DataFrame, subdir: Path, modedir: Path) -> int:
+    def _update_training_directory(self, file_data: pd.DataFrame, subdir: Path, modedir: Path) -> List[pd.DataFrame]:
         """
         Browses the 'subdir' for .htm and .html files. For any file found, it is checked if the
         file is listed in the sample file index. If not, the file is added.
@@ -157,9 +174,9 @@ class Project():
         The training directory or the data directory.
 
         returns:
-        Number of files added to the index.
+        Single row data frames that can be appended to the file index. One row per new entry.
         """
-        counter = 0
+        new_files = []
         for file in subdir.glob('*.htm*'):
             if not file.is_file():
                 continue
@@ -171,9 +188,8 @@ class Project():
             if not idx.any():
                 df = pd.DataFrame(
                     {keys.RAW_FILE: file_path}, index=[file_path])
-                pd.concat([file_data, df])
-                counter += 1
-        return counter
+                new_files.append(df)
+        return new_files
 
     def read_train_samples(self, file_data: pd.DataFrame) -> pd.Series:
         """
