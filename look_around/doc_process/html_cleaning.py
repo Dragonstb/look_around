@@ -16,12 +16,28 @@ def clean_html(html: str) -> str:
     """
     text = html.lower()  # do not mess with upper case or lower case tags
 
+    # remove comments
+    pattern = r'<!--.*?-->'
+    while re.search(pattern, text) is not None:
+        text = re.sub(pattern, ' ', text)
+
     # remove tags that do not come in pairs
     list = [r'<!doctype.*?>', r'<[/]{0,1}br.*?>',
-            r'<[/]{0,1}hr.*?>', r'<[/]{0,1}wbr.*?>', r'<[/]{0,1}meta.*?>']
+            r'<[/]{0,1}hr.*?>', r'<[/]{0,1}wbr.*?>', r'<[/]{0,1}meta.*?>',
+            r'<[/]{0,1}noscript.*?>', r'<link .*?>']
     for ex in list:
         while re.search(ex, text) is not None:
             text = re.sub(ex, ' ', text)
+
+    # remove tags in single tag syntax
+    pattern = r'<(\w+)[^>]*/>'
+    while re.search(pattern, text) is not None:
+        text = re.sub(pattern, ' ', text)
+
+    # remove style and script tags including what they embrace
+    pattern = r'<(style|script|title)[^>]*>((.|\n)*?)</\1>'
+    while re.search(pattern, text) is not None:
+        text = re.sub(pattern, ' ', text)
 
     # remove tags that come in a pair, while keeping what is between the opening
     # and the closing tag
