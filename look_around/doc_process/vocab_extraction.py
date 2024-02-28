@@ -61,6 +61,11 @@ def extract_vocab(docs: List[str], min_df=1, ngram_range: Tuple[int, int] = (1, 
             print(
                 f'\rchecking word {word+1} of {len(vocab)-1}, dropped {len(droplist)} words so far', end='')
         x = matrix.getcol(word).toarray().T[0]
+        if np.min(x) >= 1:
+            # word appears in all documents
+            droplist.append(word)
+            continue
+
         xcen = x - means[word]
         for other in range(word+1, len(vocab)):
             # check if all values in an array are the same
