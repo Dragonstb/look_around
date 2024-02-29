@@ -2,15 +2,17 @@
 
 A python module for rating text content based on a machine learning model.
 
+A word of warning: this project is still under initial development. It might be not that usable yet as it is going to be once it leaves the initial phase.
+
 ## Scope
 
-This module rates how interesting a text is for you, from zero to five starts, once you have trained an AI model. The main assumption is that your rating of a text purely raises from the appearance and the non-appearance of certain words in the document. The exact order words might not play a role. This ansatz migth be true for short texts that intend to point out certain aspects, maybe like recipies (chocolate and raisins are tasty but garlic and salmon in a cake recipy might be not) or job postings.
+This module rates how interesting a text is for you, from zero to five starts, once you have trained an AI model. The main assumption is that your rating of a text purely raises from the appearance and the non-appearance of certain words in the document. The exact order words might not play a role. This ansatz might be true for short texts that intend to point out certain aspects, maybe like recipes (chocolate and raisins are tasty but garlic and salmon in a cake recipe might be not) or job postings.
 
-look_around helps you managing the data that comes with the task. The module keeps track of the sample files and theit meta data. Such meta data might be language, if it is used as a sample fot training or the actual rating.
+look_around helps you managing the data that comes with the task. The module keeps track of the sample files and their meta data. Such meta data might be language, if it is used as a sample for training, or the actual rating.
 
-The same way you can store, organize and use different models. The module also lists them together with their tarining and validation scores. _(OK, this hasn't been implemented yet, but surely you can use this feature in the future soon)_
+The same way you can store, organize and use different models. The module also lists them together with their training and validation scores. _(OK, this hasn't been implemented yet, but surely you can use this feature in the future soon)_
 
-The module look_around also prepares the raw text files. For now, these documents need to be html files. look_around strips away the html from the texts, removes the stopwords using [nltk](https://www.nltk.org/), and stems the remaining words with the [snowballstemmer](https://pypi.org/project/snowballstemmer/). From the prepared texts a vocabulary is generated using the [scikit-learn TfidfVectorizer](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html). Words that appear in all documents or that correlate very strongly in their appearances with other words can optionally be dropped from the vocabulary.
+The module look_around also prepares the raw text files. For now, these documents need to be html files. look_around strips away the html from the texts, removes the stop words using [nltk](https://www.nltk.org/), and stems the remaining words with the [snowballstemmer](https://pypi.org/project/snowballstemmer/). From the prepared texts a vocabulary is generated using the [scikit-learn TfidfVectorizer](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html). Words that appear in all documents or that correlate very strongly in their appearances with other words can optionally be dropped from the vocabulary.
 
 ## Usage
 
