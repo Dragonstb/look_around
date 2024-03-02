@@ -1,6 +1,6 @@
 from pathlib import Path
 import json
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from look_around.core.project import Project
 import numpy as np
 import numpy.typing as npt
@@ -11,6 +11,9 @@ from look_around.run import run_dev
 from look_around.run import run_gen
 from look_around.tools import keys
 from look_around.doc_process import html_cleaning, stops_removal, stemming
+from look_around.doc_process import lang_detection
+
+_UNKNOWN = "unknown"
 
 
 class LookAround():
@@ -19,6 +22,8 @@ class LookAround():
     """The configuration json."""
     home_path: Path
     """Directory the look around projects are stored in."""
+    default_langs: List[str]
+    """A list of default languages for language detection"""
     prj: Project
     """Currently loaded project"""
     training_mode: bool
@@ -44,6 +49,7 @@ class LookAround():
                     to_home = self._config['home']
                     self.home_path = Path(
                         path.parent, to_home).absolute().resolve()
+                    self.default_langs = self._config['default_langs']
             except BaseException as be:
                 print('could not load configuration')
                 print(be)
@@ -112,7 +118,7 @@ class LookAround():
         self.test_samples = self.prj.read_test_samples(self.file_data)
         return (self.train_samples, self.test_samples)
 
-    def prepare_unclean_samples(self, lang: str = 'english', write_on_update: bool = True) -> None:
+    def prepare_unclean_samples(self, backup_langs: List[str] = ['english'], write_on_update: bool = True) -> None:
         idx1 = self.file_data[keys.RAW_FILE].notna()
         idx2 = self.file_data[keys.PREP_FILE].isna()
         df = self.file_data[idx1 & idx2]
@@ -128,15 +134,20 @@ class LookAround():
             print(f' {str(raw_file.name)} ', end='')
             prep_name = raw_file.stem + '-cleaned.txt'
             prep_file = Path(root, raw_file.parent, prep_name)
-            self._prepare_unclean_sample(row, raw_file, prep_file, root, lang)
-            counter += 1
+            try:
+                use_langs = self.default_langs
+            except AttributeError:
+                use_langs = backup_langs
+            ok = self._prepare_unclean_sample(
+                row, raw_file, prep_file, root, use_langs)
+            if ok:
+                counter += 1
 
         self.prj.write_training_index(self.file_data)
         print('\r')
         print(f'Preprocessed and wrote {counter-1} files')
 
-    def _prepare_unclean_sample(self, row: str, raw_file: Path, prep_file: Path, root: Path, lang: str) -> None:
-        print('reading file', end='')
+    def _prepare_unclean_sample(self, row: str, raw_file: Path, prep_file: Path, root: Path, search_langs: List[str]) -> bool:
         try:
             with open(raw_file, 'rt') as raw:
                 lines = [line.strip() for line in raw.readlines()]
@@ -145,33 +156,46 @@ class LookAround():
         except BaseException as be:
             print(f'cannot read raw sample file {str(raw_file)}:')
             print(be)
-            return
+            return False
 
-        use_lang = lang
-        # TODO: automatically determine language of text, or use existing value in
-        # column 'language' of self.file_data
-
-        [print('\b', end='') for _ in range(len('reading file'))]
-        print('cleaning html', end='')
         text = html_cleaning.clean_html(text)
-        [print('\b', end='') for _ in range(len('cleaning html'))]
-        print('removing stop words', end='')
-        text = stops_removal.remove_stop_words(text, lang=lang)
-        [print('\b', end='') for _ in range(len('removing stop words'))]
-        print('stemming', end='')
-        text = stemming.stem(text, lang=lang)
-        [print('\b', end='') for _ in range(len('stemming'))]
 
-        print('writing file', end='')
+        # which language?
+        try:
+            if pd.notna(self.file_data.loc[row, keys.LANGUAGE]) and self.file_data.loc[row, keys.LANGUAGE] != _UNKNOWN:
+                # use existing language
+                use_lang = str(self.file_data.loc[row, keys.LANGUAGE])
+            else:
+                # auto detect
+                use_lang = lang_detection.detect_lang(
+                    text, search_langs, threshold=0.1)
+        except KeyError:  # column language still does not exists in file_data
+            use_lang = lang_detection.detect_lang(
+                text, search_langs, threshold=0.1)
+
+        self.file_data.loc[row, keys.LANGUAGE] = use_lang
+        if use_lang == _UNKNOWN:
+            return False
+
+        # process
+        text = stops_removal.remove_stop_words(text, lang=use_lang)
+        text = stemming.stem(text, lang=use_lang)
+
+        # write cleaned file
+        ok = True
         try:
             with open(prep_file, 'wt') as prep:
                 prep.write(text)
                 self.file_data.loc[row, keys.PREP_FILE] = str(
                     prep_file.relative_to(root))
         except BaseException as be:
+            print()
             print(f'cannot write {prep_file.name}:')
             print(be)
-        [print('\b', end='') for _ in range(len('writing file'))]
+            print()
+            ok = False
+
+        return ok
 
     def get_feature_labels(self, ngram_range: Tuple[int, int] = (1, 1)) -> Tuple[spmatrix, pd.Series, spmatrix, pd.Series]:
         self.train_data = tools.get_features_labels(
