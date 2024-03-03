@@ -22,3 +22,7 @@ LANGUAGE = 'language'
 """
 Column in the sample file index: holds the language the raw sample text is written in.
 """
+ORIGIN = "origin"
+"""
+Column in the sample file index: holds the origin of the sample.
+"""

@@ -14,6 +14,7 @@ from look_around.doc_process import html_cleaning, stops_removal, stemming
 from look_around.doc_process import lang_detection
 
 _UNKNOWN = "unknown"
+_ORIGIN = "origin"
 
 
 class LookAround():
@@ -36,6 +37,7 @@ class LookAround():
     test_samples: pd.Series
     train_data: Tuple[spmatrix, pd.Series]
     test_data: Tuple[spmatrix, pd.Series]
+    origins: List[Dict]
 
     def __init__(self) -> None:
         path = Path(__file__).parent
@@ -50,6 +52,13 @@ class LookAround():
                     self.home_path = Path(
                         path.parent, to_home).absolute().resolve()
                     self.default_langs = self._config['default_langs']
+
+                    # origins
+                    try:
+                        self.origins = self._config['origins']
+                    except BaseException as be1:
+                        self.origins = []
+                        self._config['origins'] = self.origins
             except BaseException as be:
                 print('could not load configuration')
                 print(be)
@@ -143,7 +152,8 @@ class LookAround():
             if ok:
                 counter += 1
 
-        self.prj.write_training_index(self.file_data)
+        if write_on_update and counter > 0:
+            self.prj.write_training_index(self.file_data)
         print('\r')
         print(f'Preprocessed and wrote {counter-1} files')
 
@@ -158,7 +168,21 @@ class LookAround():
             print(be)
             return False
 
+        # process sample, part one
         text = html_cleaning.clean_html(text)
+
+        try:
+            origin = str(self.file_data.loc[row, keys.ORIGIN])
+        except BaseException as ba:
+            origin = pd.NA
+
+        if pd.notna(origin):
+            try:
+                sw_list = self._get_origin_stopwords(origin)
+                text = stops_removal.remove_given_stopwords(text, sw_list)
+            except BaseException as be:
+                # origin not listed in configuration. Could be mistake, could be purpose, simply skip this step
+                pass
 
         # which language?
         try:
@@ -177,7 +201,7 @@ class LookAround():
         if use_lang == _UNKNOWN:
             return False
 
-        # process
+        # process sample, part two
         text = stops_removal.remove_stop_words(text, lang=use_lang)
         text = stemming.stem(text, lang=use_lang)
 
@@ -226,3 +250,30 @@ class LookAround():
         self.read_project(name)
         self.read_training_index()
         return self.file_data
+
+    def _get_origin_stopwords(self, name: str) -> List[str]:
+        """
+        Gets the stopword list of the given origin from the configuration.
+
+        name:
+        Name of the origin.
+
+        returns:
+        The list of stopwords for this origin, or empty list if no origin of the given name is found.
+
+        raises KeyError:
+        When a json object of an origin does not have a name key (indicates a misconfiguration). Or when the
+        json object of the correct origin does not have a stopword list (indicates a misconfiguration, too).
+        """
+        for origin in self.origins:
+            # get name (might missing due to misconfiguration, raising an error then)
+            oname = origin['origin']
+            if oname != name:
+                continue
+
+            # now we have the coorect json object with name == oname
+            # get list (might be missing due to misconfiguration, raising an error in this case)
+            list = origin['stopwords']
+            return list
+
+        return []

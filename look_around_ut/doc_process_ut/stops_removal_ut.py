@@ -16,6 +16,19 @@ class TestStopsRemoval(unittest.TestCase):
         destopped = sr.remove_stop_words(text)
         self.assertEqual(expect, destopped)
 
+    def test_list(self):
+        stopwords = list('bce')
+        text = 'a b c d e f g'
+        expect = 'a d f g'
+        destopped = sr.remove_given_stopwords(text, stopwords)
+        self.assertEqual(expect, destopped)
+
+    def test_empty_list(self):
+        stopwords = []
+        text = 'a b c d e f g'
+        destopped = sr.remove_given_stopwords(text, stopwords)
+        self.assertEqual(text, destopped)
+
 
 if __name__ == '__main__':
     unittest.main()
