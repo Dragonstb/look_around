@@ -26,3 +26,25 @@ ORIGIN = "origin"
 """
 Column in the sample file index: holds the origin of the sample.
 """
+LABELED_BY = 'labeled by'
+"""
+Column in the sample file index: holds the entity that labeled the sample.
+"""
+
+
+TRAIN_ACC = 'train accuracy'
+"""Column in the model index: holds the training accuracy score"""
+TRAIN_PREC = 'train precission'
+"""Column in the model index: holds the training precission score"""
+TRAIN_REC = 'train recall'
+"""Column in the model index: holds the training recall score"""
+TRAIN_F1 = 'train f1'
+"""Column in the model index: holds the training f1 score"""
+VAL_ACC = 'train accuracy'
+"""Column in the model index: holds the validation accuracy score"""
+VAL_PREC = 'train precission'
+"""Column in the model index: holds the validation precission score"""
+VAL_REC = 'train recall'
+"""Column in the model index: holds the validation recall score"""
+VAL_F1 = 'train f1'
+"""Column in the model index: holds the validation f1 score"""

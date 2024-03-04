@@ -38,6 +38,8 @@ class LookAround():
     train_data: Tuple[spmatrix, pd.Series]
     test_data: Tuple[spmatrix, pd.Series]
     origins: List[Dict]
+    model_data: pd.DataFrame
+    """The model index that lists all known models within the project along their scores."""
 
     def __init__(self) -> None:
         path = Path(__file__).parent

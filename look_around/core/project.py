@@ -16,6 +16,7 @@ _doc_index = 'document_index.csv'
 """File name of the list of properties of the samples."""
 _chars = np.array(
     list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'))
+_model_index = 'model_index.csv'
 
 
 class Project():
@@ -125,7 +126,7 @@ class Project():
             file_data = pd.read_csv(full_path, index_col=0)
         else:
             file_data = pd.DataFrame(
-                [], columns=[keys.RAW_FILE, keys.PREP_FILE])
+                [], columns=[keys.RAW_FILE, keys.PREP_FILE, keys.ORIGIN, keys.LANGUAGE, keys.RATING, keys.LABELED_BY, keys.USAGE])
         return file_data
 
     def update_training_index(self, file_data: pd.DataFrame, write_on_update: bool = True) -> pd.DataFrame:
@@ -252,3 +253,29 @@ class Project():
                 print(be)
 
         return pd.concat(contents)
+
+    def write_model_index(self, file_data: pd.DataFrame) -> None:
+        """
+        Writes the model index as csv to the disk.
+
+        file_data:
+        Index list of the models within the project.
+        """
+        full_path = Path(self.model_dir, _model_index)
+        file_data.to_csv(full_path, index=True)
+
+    def read_model_index(self) -> pd.DataFrame:
+        """
+        Reads the model index from disk. Does not take care of I/O errors!
+
+        returns:
+        Index list of models. A new, empty one is created if the file
+        does not exist.
+        """
+        full_path = Path(self.model_dir, _model_index)
+        if full_path.exists():
+            model_data = pd.read_csv(full_path, index_col=0)
+        else:
+            model_data = pd.DataFrame(
+                [], columns=[keys.TRAIN_ACC, keys.TRAIN_PREC, keys.TRAIN_REC, keys.TRAIN_F1, keys.VAL_ACC, keys.VAL_PREC, keys.VAL_REC, keys.VAL_F1])
+        return model_data
