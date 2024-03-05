@@ -3,7 +3,7 @@ import numpy as np
 import numpy.typing as npt
 from sklearn.feature_extraction.text import TfidfVectorizer as TFV
 from look_around.tools import keys
-from typing import Tuple
+from typing import Tuple, List
 from scipy.sparse import spmatrix
 
 
@@ -29,3 +29,16 @@ def get_features_labels(vocab: npt.NDArray[np.str_], docs: pd.Series, file_data:
     features = vect.fit_transform(docs)
     labels = file_data.loc[docs.index, keys.RATING]
     return (features, labels)
+
+
+def make_model_index(index: List = []) -> pd.DataFrame:
+    """
+    Creates a new, empty model index.
+
+    returns:
+    The new model index.
+    """
+    model_data = pd.DataFrame([], columns=[keys.DESC, keys.TRAIN_ACC, keys.TRAIN_PREC,
+                              keys.TRAIN_REC, keys.TRAIN_F1, keys.VAL_ACC, keys.VAL_PREC, keys.VAL_REC, keys.VAL_F1],
+                              index=index)
+    return model_data

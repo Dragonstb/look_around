@@ -4,17 +4,15 @@ import numpy.typing as npt
 from sklearn.metrics import precision_score, accuracy_score, recall_score, f1_score
 from scipy.sparse import spmatrix
 from pathlib import Path
-
-_ACCURACY = 'accuracy'
-_PRECISION = 'precision'
-_RECALL = 'recall'
-_F1 = 'F1'
+from look_around.tools import keys
 
 
 class ModelWrapper():
 
     name: str
     """A name for the model."""
+    desc: str
+    """A description"""
     train_scores: pd.DataFrame
     """A spreadsheet with the training scores"""
     val_scores: pd.DataFrame
@@ -23,14 +21,14 @@ class ModelWrapper():
     def __init__(self, name: str) -> None:
         self.name = name
         self.train_scores = pd.DataFrame([], columns=[
-            _ACCURACY, _PRECISION, _RECALL, _F1], index=[0, 1, 2, 3, 4, 5, 'avg'])
+            keys.ACCURACY, keys.PRECISION, keys.RECALL, keys.F1], index=[0, 1, 2, 3, 4, 5, 'avg'])
         self.val_scores = pd.DataFrame([], columns=[
-            _ACCURACY, _PRECISION, _RECALL, _F1], index=[0, 1, 2, 3, 4, 5, 'avg'])
+            keys.ACCURACY, keys.PRECISION, keys.RECALL, keys.F1], index=[0, 1, 2, 3, 4, 5, 'avg'])
 
     def fit(self, features: spmatrix, labels: pd.Series) -> None:
         pass
 
-    def compute_training_scores(self, features: spmatrix, labels: pd.Series) -> None:
+    def compute_training_scores(self, features: spmatrix, labels: pd.Series) -> pd.DataFrame:
         """
         Computes the accuracies, precisions, recalls, and f1 scores for the training data.
 
@@ -42,18 +40,20 @@ class ModelWrapper():
         """
         pred = self.predict(features)
         acc = self.compute_accuracy(labels, pred)
-        self.train_scores[_ACCURACY] = acc
+        self.train_scores[keys.ACCURACY] = acc
         prec = self.compute_precision(labels, pred)
-        self.train_scores[_PRECISION] = prec
+        self.train_scores[keys.PRECISION] = prec
         rec = self.compute_recall(labels, pred)
-        self.train_scores[_RECALL] = rec
+        self.train_scores[keys.RECALL] = rec
         f1 = self.compute_f1(labels, pred)
-        self.train_scores[_F1] = f1
+        self.train_scores[keys.F1] = f1
+
+        return self.train_scores
 
     def predict(self, features: spmatrix) -> npt.NDArray:
         return np.array([])
 
-    def validate(self, features: spmatrix, labels: pd.Series) -> None:
+    def validate(self, features: spmatrix, labels: pd.Series) -> pd.DataFrame:
         """
         Applies the validation data. The predictions are computed for the validation samples
         and compared against the validation labels. Also writes the accuracy, precision,
@@ -67,13 +67,15 @@ class ModelWrapper():
         """
         pred = self.predict(features)
         acc = self.compute_accuracy(labels, pred)
-        self.val_scores[_ACCURACY] = acc
+        self.val_scores[keys.ACCURACY] = acc
         prec = self.compute_precision(labels, pred)
-        self.val_scores[_PRECISION] = prec
+        self.val_scores[keys.PRECISION] = prec
         rec = self.compute_recall(labels, pred)
-        self.val_scores[_RECALL] = rec
+        self.val_scores[keys.RECALL] = rec
         f1 = self.compute_f1(labels, pred)
-        self.val_scores[_F1] = f1
+        self.val_scores[keys.F1] = f1
+
+        return self.val_scores
 
     def compute_precision(self, labels: pd.Series, pred: npt.NDArray) -> npt.NDArray[np.float_]:
         """
@@ -162,7 +164,7 @@ class ModelWrapper():
         avg = np.mean(label_f1)
         return np.concatenate([label_f1, [avg]])
 
-    def save_model(self, dir: Path) -> None:
+    def write_model(self, dir: Path) -> None:
         """
         Save the model under its name in the given directory.
 

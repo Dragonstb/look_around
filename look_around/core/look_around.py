@@ -12,12 +12,18 @@ from look_around.run import run_gen
 from look_around.tools import keys
 from look_around.doc_process import html_cleaning, stops_removal, stemming
 from look_around.doc_process import lang_detection
+from look_around.models.model_wrapper import ModelWrapper
 
 _UNKNOWN = "unknown"
 _ORIGIN = "origin"
 
 
 class LookAround():
+    """
+    A data managing class. It provides a rich API for loading and storing data, performing
+    computations and such. This class delegates these tasks to the right classes with the right
+    arguments. It barely does work by itself.
+    """
 
     _config: Dict
     """The configuration json."""
@@ -67,6 +73,8 @@ class LookAround():
 
             self.training_mode = True
 
+    # _______________  project  _______________
+
     def create_project(self, name: str) -> Project:
         """
         Creates a new project and its folders and sets it as the active one.
@@ -106,6 +114,8 @@ class LookAround():
         self.prj = Project(name, self.home_path)
         return self.prj
 
+    # _______________  vocabulary  _______________
+
     def read_vocab(self, name: str) -> npt.NDArray[np.str_]:
         """
         Loads a vocabulary.
@@ -118,6 +128,126 @@ class LookAround():
         """
         self.vocab = self.prj.read_vocab(name)
         return self.vocab
+
+    # _______________  models  _______________
+
+    def read_model_index(self) -> pd.DataFrame:
+        """
+        Reads the model index.
+
+        returns:
+        The model index.
+        """
+        self.model_data = self.prj.read_model_index()
+        return self.model_data
+
+    def add_to_model_index(self, model: ModelWrapper, write_on_update: bool = True) -> pd.DataFrame:
+        """
+        Adds the model to the model index with the name of the model as index. Also
+        notes down the scores.
+
+        model:
+        The model to be added.
+
+        write_on_update (default True):
+        Write the model to disk if it has been updated?
+
+        returns:
+        The model index.
+        """
+        new_model_data = tools.make_model_index(index=[model.name])
+        self.model_data = pd.concat([self.model_data, new_model_data])
+        self.update_model_in_index(model, write_on_update)
+        return self.model_data
+
+    def update_model_in_index(self, model: ModelWrapper, write_on_update: bool = True) -> pd.DataFrame:
+        """
+        Updates the entries in the model index for the given model. Just gives
+        a message to sout when the model is not listed, without modifications to
+        the model index.
+
+        model:
+        The model with new values
+
+        write_on_update (default True):
+        Write the model to disk if it has been updated?
+
+        returns:
+        The model index
+        """
+        try:
+            self.model_data.loc[model.name]
+        except KeyError as ke:
+            # TODO: localize message
+            print('No model with such a name is listed in the index.')
+            return self.model_data
+
+        try:
+            if model.desc is not None:
+                use_desc = model.desc
+            else:
+                use_desc = pd.NA
+        except AttributeError:
+            # desc not set
+            use_desc = pd.NA
+
+        self.model_data.loc[model.name, keys.DESC] = use_desc
+        self.model_data.loc[model.name,
+                            keys.TRAIN_ACC] = model.train_scores.loc['avg', keys.ACCURACY]
+        self.model_data.loc[model.name,
+                            keys.TRAIN_PREC] = model.train_scores.loc['avg', keys.PRECISION]
+        self.model_data.loc[model.name,
+                            keys.TRAIN_REC] = model.train_scores.loc['avg', keys.RECALL]
+        self.model_data.loc[model.name,
+                            keys.TRAIN_F1] = model.train_scores.loc['avg', keys.F1]
+        self.model_data.loc[model.name,
+                            keys.VAL_ACC] = model.val_scores.loc['avg', keys.ACCURACY]
+        self.model_data.loc[model.name,
+                            keys.VAL_PREC] = model.val_scores.loc['avg', keys.PRECISION]
+        self.model_data.loc[model.name,
+                            keys.VAL_REC] = model.val_scores.loc['avg', keys.RECALL]
+        self.model_data.loc[model.name,
+                            keys.VAL_F1] = model.val_scores.loc['avg', keys.F1]
+
+        if write_on_update:
+            self.prj.write_model_index(self.model_data)
+
+        return self.model_data
+
+    def write_model(self, model: ModelWrapper) -> None:
+        """
+        Stores the model into the model directory. The model name is used as file name.
+        The file suffix depends on the actual model.
+
+        model:
+        The model that is stored.
+        """
+        self.prj.write_model(model)
+
+    def read_model(self, name: str) -> ModelWrapper:
+        return self.prj.read_model(name)
+
+    def compute_train_scores(self, model: ModelWrapper) -> pd.DataFrame:
+        """
+        Computes some scores of the model from the training data and their labels. The scores are
+        calculated for each label and for the entire set of data.
+
+        returns:
+        Data frame with the training scores.
+        """
+        return model.compute_training_scores(self.train_data[0], self.train_data[1])
+
+    def compute_val_scores(self, model: ModelWrapper) -> pd.DataFrame:
+        """
+        Computes some scores of the model from the validation data and their labels. The scores are
+        calculated for each label and for the entire set of data.
+
+        returns:
+        Data frame with the validation scores.
+        """
+        return model.validate(self.test_data[0], self.test_data[1])
+
+    # _______________  training data  _______________
 
     def read_training_index(self) -> pd.DataFrame:
         self.file_data = self.prj.read_training_index()
@@ -230,6 +360,19 @@ class LookAround():
             self.vocab, self.test_samples, self.file_data, ngram_range=ngram_range)
         return (self.train_data[0], self.train_data[1], self.test_data[0], self.test_data[1])
 
+    def load_training_project(self, name: str) -> pd.DataFrame:
+        """
+        Shortcut for 'read_project(name)' and 'read_training_index()'.
+
+        returns:
+        The sample file index.
+        """
+        self.read_project(name)
+        self.read_training_index()
+        return self.file_data
+
+    # _______________  misc  _______________
+
     def make_dev_project(self, size: int, name: str) -> Project:
         self.prj = run_dev.create_dev_project(size, name, self.home_path)
         return self.prj
@@ -241,17 +384,6 @@ class LookAround():
 
     def is_in_training_mode(self) -> bool:
         return self.training_mode
-
-    def load_training_project(self, name: str) -> pd.DataFrame:
-        """
-        Shortcut for 'read_project(name)' and 'read_training_index()'.
-
-        returns:
-        The sample file index.
-        """
-        self.read_project(name)
-        self.read_training_index()
-        return self.file_data
 
     def _get_origin_stopwords(self, name: str) -> List[str]:
         """

@@ -32,6 +32,6 @@ class TfKerasModel(ModelWrapper):
         pred = np.argmax(cat_pred, axis=1)  # inverts to_categorical
         return pred
 
-    def save_model(self, dir: Path) -> None:
+    def write_model(self, dir: Path) -> None:
         path = Path(dir, f'{self.name}.keras')
         self.model.save(path)

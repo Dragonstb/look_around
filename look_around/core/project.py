@@ -4,7 +4,10 @@ import numpy.typing as npt
 import look_around.dev_tools.utils as utils
 from typing import Dict, List
 import pandas as pd
-from look_around.tools import keys
+from look_around.tools import keys, tools
+from look_around.models.model_wrapper import ModelWrapper
+from tensorflow.keras.models import load_model
+from look_around.models.tfkeras_model import TfKerasModel
 
 _train_dir = 'training'
 """Directory for the training data."""
@@ -276,6 +279,52 @@ class Project():
         if full_path.exists():
             model_data = pd.read_csv(full_path, index_col=0)
         else:
-            model_data = pd.DataFrame(
-                [], columns=[keys.TRAIN_ACC, keys.TRAIN_PREC, keys.TRAIN_REC, keys.TRAIN_F1, keys.VAL_ACC, keys.VAL_PREC, keys.VAL_REC, keys.VAL_F1])
+            model_data = tools.make_model_index()
         return model_data
+
+    def read_model(self, name: str) -> ModelWrapper:
+        """
+        Loads the model with the given name and wraps it into an approbiate wrapper. The file suffix
+        determines which wrapper is approbiate.
+
+        The model is taken from the model directory and only from the model directory.
+
+        ---
+
+        name:
+        Name of the model. This is also the file name without suffix.
+
+        returns:
+        The wrapped model.
+
+        ---
+
+        raises FileNotFoundException:
+        If no file with 'name' as stem is found.
+
+        raises RuntimeError:
+        If the found file does not have a supported file suffix.
+        """
+        files = [file for file in self.model_dir.iterdir(
+        ) if file.is_file() and file.stem == name]
+        if len(files) == 0:
+            raise FileNotFoundError('No model file with the provided name')
+
+        file = files[0]
+        if file.suffix == '.keras':
+            model = load_model(file)
+            wrap = TfKerasModel(name, model)
+            return wrap
+        else:
+            raise RuntimeError('Unsupported suffix')
+
+    def write_model(self, model: ModelWrapper) -> None:
+        """
+        Stores the model into the model directory. The model name is used as file name.
+        The file suffix depends on the actual model.
+
+        model:
+        The model that is stored.
+        """
+        dir = self.model_dir
+        model.write_model(dir)
