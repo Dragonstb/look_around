@@ -77,30 +77,39 @@ class ModelWrapper():
 
         return self.val_scores
 
-    def compute_precision(self, labels: pd.Series, pred: npt.NDArray) -> npt.NDArray[np.float_]:
+    def compute_precision(self, labels: pd.Series, pred: npt.NDArray, categories: int = 6) -> npt.NDArray[np.float_]:
         """
         Computes the precision (true positives over all positive classifications) for each label.
         Also computes the, unweighted, average of the precisions.
+
+        ---
 
         labels:
         The true labels.
 
         pred:
         The predicted samples.
+
+        categories (default 6):
+        The number of categories.
+
+        ---
 
         returns:
         The label-specific precisions, with the precision of 0 star ratings at index 0, of 5 star ratings
         at index 5, and the average precision at index 6.
         """
         label_prec = precision_score(
-            labels, pred, labels=np.arange(6), average=None)
+            labels, pred, labels=np.arange(categories), average=None)
         avg = np.mean(label_prec)
         return np.concatenate([label_prec, [avg]])
 
-    def compute_accuracy(self, labels: pd.Series, pred: npt.NDArray) -> npt.NDArray[np.float_]:
+    def compute_accuracy(self, labels: pd.Series, pred: npt.NDArray, categories: int = 6) -> npt.NDArray[np.float_]:
         """
         Computes the accuracy (fraction of correct classifications) for each label as well as for
         all samples.
+
+        ---
 
         labels:
         The true labels.
@@ -108,13 +117,18 @@ class ModelWrapper():
         pred:
         The predicted samples.
 
+        categories (default 6):
+        The number of categories.
+
+        ---
+
         returns:
         The label-specific accuracies, with the accuracy of 0 star ratings at index 0, of 5 star ratings
-        at index 5, and the overall accuracy at index 6.
+        at index 5, and the overall accuracy at index 6 (if categories=6).
 
         """
         acc = []
-        for label in range(6):
+        for label in range(categories):
             idx1 = labels == label
             idx2 = pred == label
             idxTP = idx1 & idx2
@@ -125,42 +139,57 @@ class ModelWrapper():
         acc.append(acc_mean)
         return np.array(acc)
 
-    def compute_recall(self, labels: pd.Series, pred: npt.NDArray) -> npt.NDArray[np.float_]:
+    def compute_recall(self, labels: pd.Series, pred: npt.NDArray, categories: int = 6) -> npt.NDArray[np.float_]:
         """
         Computes the recall (true positives over all positive samples) for each label.
         Also computes the, unweighted, average of the recalls.
 
+        ---
+
         labels:
         The true labels.
 
         pred:
         The predicted samples.
 
+        categories (default 6):
+        The number of categories.
+
+        ---
+
         returns:
         The label-specific recalls, with the recall of 0 star ratings at index 0, of 5 star ratings
-        at index 5, and the average recall at index 6.
+        at index 5, and the average recall at index 6 (if categories=6).
         """
         label_rec = recall_score(
-            labels, pred, labels=np.arange(6), average=None)
+            labels, pred, labels=np.arange(categories), average=None)
         avg = np.mean(label_rec)
         return np.concatenate([label_rec, [avg]])
 
-    def compute_f1(self, labels: pd.Series, pred: npt.NDArray) -> npt.NDArray[np.float_]:
+    def compute_f1(self, labels: pd.Series, pred: npt.NDArray, categories: int = 6) -> npt.NDArray[np.float_]:
         """
         Computes the f1 (true positives over all positive samples) for each label.
         Also computes the, unweighted, average of the f1s.
 
+        ---
+
         labels:
         The true labels.
 
         pred:
         The predicted samples.
 
+        categories (default 6):
+        The number of categories.
+
+        ---
+
         returns:
         The label-specific f1s, with the f1 of 0 star ratings at index 0, of 5 star ratings
-        at index 5, and the average f1 at index 6.
+        at index 5, and the average f1 at index 6 (if categories=6).
         """
-        label_f1 = f1_score(labels, pred, labels=np.arange(6), average=None)
+        label_f1 = f1_score(
+            labels, pred, labels=np.arange(categories), average=None)
         avg = np.mean(label_f1)
         return np.concatenate([label_f1, [avg]])
 
