@@ -1,4 +1,3 @@
-from numpy._typing import NDArray
 from tensorflow.keras import Model
 from tensorflow.keras.utils import to_categorical
 from look_around.models.model_wrapper import ModelWrapper

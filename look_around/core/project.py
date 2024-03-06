@@ -8,6 +8,8 @@ from look_around.tools import keys, tools
 from look_around.models.model_wrapper import ModelWrapper
 from tensorflow.keras.models import load_model
 from look_around.models.tfkeras_model import TfKerasModel
+from look_around.models.sklearn_model import SklearnModel
+from joblib import load
 
 _train_dir = 'training'
 """Directory for the training data."""
@@ -314,6 +316,10 @@ class Project():
         if file.suffix == '.keras':
             model = load_model(file)
             wrap = TfKerasModel(name, model)
+            return wrap
+        elif file.suffix == '.sklearn':
+            model = load(file)
+            wrap = SklearnModel(model)
             return wrap
         else:
             raise RuntimeError('Unsupported suffix')
