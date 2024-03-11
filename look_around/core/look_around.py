@@ -13,6 +13,7 @@ from look_around.tools import keys
 from look_around.doc_process import html_cleaning, stops_removal, stemming
 from look_around.doc_process import lang_detection
 from look_around.models.model_wrapper import ModelWrapper
+from look_around.presenter.presenter import Presenter
 
 _UNKNOWN = "unknown"
 _ORIGIN = "origin"
@@ -370,6 +371,15 @@ class LookAround():
         self.read_project(name)
         self.read_training_index()
         return self.file_data
+
+    # _______________  present data  _______________
+
+    def present_training_data(self):
+        """
+        Presents the training data in a rating window.
+        """
+        pres = Presenter(self.file_data, self.prj.training_dir)
+        pres.show()
 
     # _______________  misc  _______________
 

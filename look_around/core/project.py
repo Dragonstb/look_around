@@ -259,6 +259,13 @@ class Project():
 
         return pd.concat(contents)
 
+    def read_sample_file(self, full_path: Path) -> str:
+        with open(full_path, 'rt') as file:
+            content = [line.strip() for line in file.readlines()]
+            text = ' '.join(content)
+
+        return text
+
     def write_model_index(self, file_data: pd.DataFrame) -> None:
         """
         Writes the model index as csv to the disk.
@@ -319,7 +326,7 @@ class Project():
             return wrap
         elif file.suffix == '.sklearn':
             model = load(file)
-            wrap = SklearnModel(model)
+            wrap = SklearnModel(name, model)
             return wrap
         else:
             raise RuntimeError('Unsupported suffix')

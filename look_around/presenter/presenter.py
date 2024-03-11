@@ -1,95 +1,103 @@
-from tkinterweb import HtmlFrame
-from tkinter import Tk
-from tkinter.ttk import Frame, Label, Button
 from random import randint
+from look_around.presenter.rating_window import RatingWindow
+from look_around.presenter.rating_controller import RatingController
+from pandas import DataFrame
+import numpy as np
+from look_around.core.project import Project
+from look_around.tools import keys
+from pathlib import Path
+from numpy import isnan
 
 
-class Presenter():
+class Presenter(RatingController):
+    """
+    Presents the samples to the user. The user may browse through the samples and rate any sample.
 
-    tk: Tk
-    web: HtmlFrame
+    This class acts a controller in the sense of an MVC when presenting the samples. The class receives a DataFrame in the constructor.
+    The DataFrame is the model. An instance of 'RatingWindow' is created which serves as the view.
+    """
 
-    def __init__(self) -> None:
-        self.tk = Tk()
-        self.web = HtmlFrame(self.tk, messages_enabled=False)
-        self.web.load_html(self._random_html())
+    dir: Path
+    rat_win: RatingWindow
+    data: DataFrame
+    cur_idx: int
 
-        frm = Frame(self.web)
-        frm.grid()
-        Button(frm, text="<-",
-               command=self._prev).grid(column=0, row=1, rowspan=2)
-        Button(frm, text="->",
-               command=self._next).grid(column=1, row=1, rowspan=2)
-        Label(frm, text="Current rating").grid(
-            column=2, row=1)  # TODO: localize
-        Label(frm, text="None").grid(column=2, row=2)  # TODO: localize
-        Button(frm, text="0", command=self._rate_0).grid(
-            column=3, row=1, rowspan=2)
-        Button(frm, text="1", command=self._rate_1).grid(
-            column=4, row=1, rowspan=2)
-        Button(frm, text="2", command=self._rate_2).grid(
-            column=5, row=1, rowspan=2)
-        Button(frm, text="3", command=self._rate_3).grid(
-            column=6, row=1, rowspan=2)
-        Button(frm, text="4", command=self._rate_4).grid(
-            column=7, row=1, rowspan=2)
-        Button(frm, text="5", command=self._rate_5).grid(
-            column=8, row=1, rowspan=2)
-        Button(frm, text="Quit", command=self.tk.destroy).grid(
-            column=0, row=3, columnspan=9)
-        self.web.pack(fill="both", expand=True)
+    def __init__(self, data: DataFrame, dir: Path) -> None:
+        self.data = data
+        self.dir = dir
+        if len(data) > 0:
+            self.cur_idx = 0
+        else:
+            self.cur_idx = -1
 
     def show(self) -> None:
-        self.tk.mainloop()
+        self.rat_win = RatingWindow(self)
+        self._update_view()
+        self.rat_win.mainloop()
 
-    def _prev(self) -> None:
-        print('prev')
-        self.web.load_html(self._random_html())
+    def prev(self) -> None:
+        self.cur_idx -= 1
+        if self.cur_idx < 0:
+            # luckily, this ends up at -1 if there is no data in 'data'
+            self.cur_idx = len(self.data) - 1
+        self._update_view()
 
-    def _next(self) -> None:
-        print('next')
-        self.web.load_html(self._random_html())
+    def next(self) -> None:
+        self.cur_idx += 1
+        if self.cur_idx >= len(self.data):
+            if len(self.data) > 0:
+                self.cur_idx = 0
+            else:
+                self.cur_idx = -1
+        self._update_view()
 
-    def _rate_0(self) -> None:
-        self._rate(0)
+    def rate(self, rating: int) -> None:
+        idx = self.data.index[self.cur_idx]
+        self.data.loc[idx, keys.RATING] = rating
+        self.data.loc[idx, keys.LABELED_BY] = 'me'  # TODO: localize
+        self.rat_win.set_rating(rating)
 
-    def _rate_1(self) -> None:
-        self._rate(1)
+    def _update_view(self) -> None:
+        """
+        Updates all sample-specific GUI elements: the html panel and the rating.
+        """
+        rating = self._get_rating()
+        self.rat_win.set_rating(rating)
+        self._update_html()
 
-    def _rate_2(self) -> None:
-        self._rate(2)
+    def _update_html(self) -> None:
+        """
+        Updates the html panel with the current html file. If loading fails or if there
+        is no data, a message is displayed instead.
+        """
+        if self.cur_idx < 0 or self.cur_idx >= len(self.data):
+            html = '<html><head></head><body><h1>No data around</h1></body></html>'
+            self.rat_win.load_html(html)
+            return
 
-    def _rate_3(self) -> None:
-        self._rate(3)
+        sub_path = self.data[keys.RAW_FILE][self.cur_idx]
+        full_path = Path(self.dir, sub_path)
+        try:
+            self.rat_win.load_file(str(full_path))
+        except:
+            html = '<html><head></head><body><h1>Exception</h1></body></html>'
+            self.rat_win.load_html(html)
 
-    def _rate_4(self) -> None:
-        self._rate(4)
-
-    def _rate_5(self) -> None:
-        self._rate(5)
-
-    def _rate(self, rating: int) -> None:
-        print(f'rating as {rating} stars')
-
-    def _random_html(self) -> str:
-        words = ['<html>', '<head>', '<title>']
-        words.append(self._random_word(5, 12))
-        words += ['</title>', '</head>', '<body>', '<h1>']
-        for _ in range(randint(1, 2)):
-            words.append(self._random_word(4, 8))
-        words += ['</h1>']
-        for x1 in range(randint(2, 5)):
-            words.append('<h4>')
-            for _ in range(randint(1, 5)):
-                words.append(self._random_word(3, 8))
-            words.append('</h4>')
-            for _ in range(randint(20, 70)):
-                words.append(self._random_word(3, 12))
-        words += ['</body>', '</html>']
-        return ' '.join(words)
-
-    def _random_word(self, a: int, b: int) -> str:
-        chars = list('abcdefghijklmnopqrstuvwxyz')
-        roll = randint(a, b)
-        word = [chars[randint(0, len(chars)-1)] for _ in range(roll)]
-        return ''.join(word)
+    def _get_rating(self) -> int:
+        """
+        Gets the rating for the current sample.
+        -----
+        returns:
+        Rating of the current sample. if the current sample has not been rated yet, -1 is returned.
+        """
+        try:
+            rating = self.data[keys.RATING][self.cur_idx]
+            if isnan(rating):
+                rating = -1
+        except KeyError:
+            # most likely, column does not exist
+            self.data[keys.RATING] = -1
+            rating = -1
+        except BaseException:
+            rating = -1
+        return rating

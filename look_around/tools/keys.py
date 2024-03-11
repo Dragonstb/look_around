@@ -28,7 +28,7 @@ Column in the sample file index: holds the origin of the sample.
 """
 LABELED_BY = 'labeled by'
 """
-Column in the sample file index: holds the entity that labeled the sample.
+Column in the sample file index: holds the entity that has labeled the sample.
 """
 
 DESC = 'description'
