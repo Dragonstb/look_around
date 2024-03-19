@@ -8,12 +8,12 @@ import pandas as pd
 from look_around.tools import tools
 from scipy.sparse import spmatrix
 from look_around.run import run_dev
-from look_around.run import run_gen
 from look_around.tools import keys
 from look_around.doc_process import html_cleaning, stops_removal, stemming
 from look_around.doc_process import lang_detection
 from look_around.models.model_wrapper import ModelWrapper
 from look_around.presenter.presenter import Presenter
+from look_around.scraper.selenium_scraper import SeleniumScraper
 
 _UNKNOWN = "unknown"
 _ORIGIN = "origin"
@@ -380,6 +380,24 @@ class LookAround():
         """
         pres = Presenter(self.file_data, self.prj.training_dir)
         pres.show()
+
+    # _______________  scraper  _______________
+
+    def scrape_single_origin(self, origin: Dict, browser: str) -> None:
+        try:
+            base_url = origin['base_url']
+        except KeyError:
+            print('Cannot scrape origin: no base url')
+            return
+
+        try:
+            actions = origin['actions']
+        except KeyError:
+            print('Cannot scrape origin: no actions')
+            return
+
+        scraper = SeleniumScraper(base_url, browser)
+        scraper.run(actions)
 
     # _______________  misc  _______________
 
