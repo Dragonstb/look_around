@@ -125,6 +125,19 @@ class SeleniumScraper():
         return elems
 
     def _click_action(self, parent: WebElement, config: Dict, driver: WebDriver) -> None:
+        """
+        Clicks the last descendant in the list of children given in the 'config'. Then, if present, it applies the actions
+        listed in 'config' to the driver.
+
+        parent:
+        Element to look from in lineage of children.
+
+        config:
+        Configuration of the click action.
+
+        driver:
+        The web driver.
+        """
         children = config["children"]
         elem = self._traverse_children(parent, children)
         ActionChains(driver).scroll_to_element(elem).perform()
@@ -141,6 +154,16 @@ class SeleniumScraper():
             self._apply_action_to_driver(driver, action)
 
     def _sleep_action(self, config: Dict, driver: WebDriver) -> None:
+        """
+        Let the script rest for a few seconds.
+
+        config:
+        Action configuration. Should define a number 'min' and a number 'max'. The script sleeps
+        a random amount of seconds between min and max.
+
+        driver:
+        The web driver.
+        """
         try:
             min_time = config['min']
         except KeyError:
@@ -158,6 +181,12 @@ class SeleniumScraper():
         time.sleep(sleep_time)
 
     def _back_action(self, driver: WebDriver) -> None:
+        """
+        Go one page back.
+
+        driver:
+        The web driver.
+        """
         driver.back()
 
     def _get_by(self, type: str) -> str:
@@ -206,6 +235,8 @@ class SeleniumScraper():
 
         raises:
         ValueError if an antry in 'children' is badly formatted.
+
+        NoSuchElementException if a single child cannot be found.
         """
         elem = parent
         # descent the lineage of descendants

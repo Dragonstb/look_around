@@ -45,6 +45,7 @@ class LookAround():
     train_data: Tuple[spmatrix, pd.Series]
     test_data: Tuple[spmatrix, pd.Series]
     origins: List[Dict]
+    browser: str
     model_data: pd.DataFrame
     """The model index that lists all known models within the project along their scores."""
 
@@ -68,6 +69,14 @@ class LookAround():
                     except BaseException as be1:
                         self.origins = []
                         self._config['origins'] = self.origins
+
+                    # browser
+                    try:
+                        self.browser = self._config['browser'].lower()
+                    except BaseException:
+                        self.browser = ''
+                        self._config['browser'] = self.browser
+
             except BaseException as be:
                 print('could not load configuration')
                 print(be)
