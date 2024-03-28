@@ -203,18 +203,20 @@ class SeleniumScraper():
         The web driver.
         """
         children = config["children"]
-        elem = self._traverse_children(parent, children)
-        elem.click()
+        repeat = self._get_repeating(config)
+        while repeat == ck.AS_LONG_AS_POSSIBLE:
+            elem = self._traverse_children(parent, children)
+            elem.click()  # may raise exception once it is not possible anymore
 
-        # actions to be called on these elements
-        try:
-            actions = config['actions']
-        except KeyError:
-            # no further actions
-            return
+            # actions to be called on these elements
+            try:
+                actions = config['actions']
+            except KeyError:
+                # no further actions
+                return
 
-        for action in actions:
-            self._apply_action_to_driver(driver, action)
+            for action in actions:
+                self._apply_action_to_driver(driver, action)
 
     def _sleep_action(self, config: Dict, driver: WebDriver) -> None:
         """
@@ -369,3 +371,25 @@ class SeleniumScraper():
                 elems = elem.find_elements(by, val)
                 elem = elems[idx]
         return elem
+
+    def _get_repeating(self, config: Dict) -> str:
+        """
+        Extracts the value of the key 'repeat' from the configuration.
+
+        ----
+
+        config:
+        The configuration of the action.
+
+        ----
+        returns:
+        The repitition. If the key is missing or the value invalid, 'no' is returned.
+        """
+        try:
+            repeat = config[ck.REPEAT]
+            if repeat != ck.AS_LONG_AS_POSSIBLE:
+                repeat = ck.NO
+        except BaseException:
+            repeat = ck.NO
+
+        return repeat
