@@ -14,6 +14,7 @@ from look_around.doc_process import lang_detection
 from look_around.models.model_wrapper import ModelWrapper
 from look_around.presenter.presenter import Presenter
 from look_around.scraper.selenium_scraper import SeleniumScraper
+from look_around.scraper.page_handlers.print_handler import PrintHandler
 
 _UNKNOWN = "unknown"
 _ORIGIN = "origin"
@@ -406,6 +407,7 @@ class LookAround():
             return
 
         scraper = SeleniumScraper(base_url, browser)
+        scraper.register_page_handler('print_handler', PrintHandler())
         scraper.run(actions)
 
     # _______________  misc  _______________

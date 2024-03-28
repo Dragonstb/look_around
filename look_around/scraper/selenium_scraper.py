@@ -7,16 +7,19 @@ from selenium.webdriver.remote.webdriver import WebDriver
 import time
 from typing import List, Dict
 import random
+from look_around.scraper.page_handlers.page_handler import PageHandler
 
 
 class SeleniumScraper():
 
     base_url: str
     browser: str
+    handlers: Dict[str, PageHandler]
 
     def __init__(self, base_url: str, browser: str) -> None:
         self.base_url = base_url
         self.browser = browser
+        self.handlers = {}
 
     def run(self, actions: List):
         if self.browser == 'chrome':
@@ -42,6 +45,19 @@ class SeleniumScraper():
             print('quitting')  # TODO: localize
 
         driver.quit()
+
+    def register_page_handler(self, name: str, handler: PageHandler) -> None:
+        """
+        Registers the pahe handler and makes it accessible via the provided name.
+
+        ----
+        name:
+        Key with that the handler is registered.
+
+        handler:
+        The page handler.
+        """
+        self.handlers[name] = handler
 
     def _apply_action_to_driver(self, driver: WebDriver, config: Dict) -> None:
         """
@@ -93,6 +109,8 @@ class SeleniumScraper():
                 self._sleep_action(config, driver)
             elif type == 'back':
                 self._back_action(driver)
+            elif type == 'handle':
+                self._handling_action(config, driver)
         except BaseException as be:
             print(be)
 
@@ -228,6 +246,31 @@ class SeleniumScraper():
         The web driver.
         """
         driver.back()
+
+    def _handling_action(self, config: Dict, driver: WebDriver) -> None:
+        """
+        Invokes a page handler registered with the given name. If no page handler is registerd
+        with the name provided, this method simply does nothing and returns. Also simply
+        returns if the action configuration does not provide a name.
+
+        ----
+        config:
+        Json containing the configuration of the action.
+
+        driver:
+        The web driver.
+        """
+        try:
+            name = config['name'].strip()
+        except KeyError:
+            print('Configuration for page handling does not has a name given, aborting')
+            return
+
+        try:
+            handler = self.handlers[name]
+            handler.handle_page(driver)
+        except BaseException:
+            pass  # just return
 
     def _get_by(self, type: str) -> str:
         """
