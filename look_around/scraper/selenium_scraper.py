@@ -4,10 +4,12 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.support.wait import WebDriverWait
 import time
 from typing import List, Dict
 import random
 from look_around.scraper.page_handlers.page_handler import PageHandler
+from look_around.scraper import config_keys as ck
 
 
 class SeleniumScraper():
@@ -34,8 +36,6 @@ class SeleniumScraper():
             print('Unsupported browser for now')
             return
 
-        driver.implicitly_wait(2)
-
         try:
             driver.get(self.base_url)
             for action in actions:
@@ -58,6 +58,8 @@ class SeleniumScraper():
         The page handler.
         """
         self.handlers[name] = handler
+
+    # _______________  top level action handling  _______________
 
     def _apply_action_to_driver(self, driver: WebDriver, config: Dict) -> None:
         """
@@ -111,8 +113,12 @@ class SeleniumScraper():
                 self._back_action(driver)
             elif type == 'handle':
                 self._handling_action(config, driver)
+            elif type == 'simple cookie dialog':
+                self._simple_cookie_dialog(parent, config, driver)
         except BaseException as be:
             print(be)
+
+    # _______________  default actions  _______________
 
     def _list_action(self, parent: WebElement, ancestors: List[str], config: Dict, driver: WebDriver) -> None:
         """
@@ -198,7 +204,6 @@ class SeleniumScraper():
         """
         children = config["children"]
         elem = self._traverse_children(parent, children)
-        ActionChains(driver).scroll_to_element(elem).perform()
         elem.click()
 
         # actions to be called on these elements
@@ -271,6 +276,27 @@ class SeleniumScraper():
             handler.handle_page(driver)
         except BaseException:
             pass  # just return
+
+    # _______________  fun with cookie banners  _______________
+
+    def _simple_cookie_dialog(self, parent: WebElement, config: Dict, driver: WebDriver) -> None:
+        children = config[ck.CHILDREN]
+
+        try:
+            wait_for = int(config[ck.WAIT_FOR])
+        except:
+            wait_for = 10
+
+        elem = self._traverse_children(parent, children)
+        wait = WebDriverWait(driver, timeout=wait_for)
+        wait.until(lambda _: self._is_interactible(elem))
+
+        elem.click()
+
+    def _is_interactible(self, elem: WebElement) -> bool:
+        return elem.is_displayed() and elem.is_enabled()
+
+    # _______________  utilities  _______________
 
     def _get_by(self, type: str) -> str:
         """
