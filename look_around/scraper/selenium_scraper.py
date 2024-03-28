@@ -44,11 +44,40 @@ class SeleniumScraper():
         driver.quit()
 
     def _apply_action_to_driver(self, driver: WebDriver, config: Dict) -> None:
+        """
+        Actually, applies the action to the html tag.
+
+        ---
+        driver:
+        The web driver.
+
+        config:
+        The json with the configuration for the action.
+        """
         elem = driver.find_element(By.TAG_NAME, 'html')
         ancestors = []
         self._apply_action_to_elem(elem, ancestors, config, driver)
 
     def _apply_action_to_elem(self, parent: WebElement, ancestors: List[str], config: Dict, driver: WebDriver) -> None:
+        """
+        Applies the action, which is described and configured in 'config', to the given element. The method returns if
+        the configuration does not contain a key 'type'. The method call for the action is surrounded by a try/except block
+        that react on BaseExceptions.
+
+        ----
+        parent:
+        Element the action is applied to. If the action demands a search for a child element, the search starts from
+        this element here.
+
+        ancestors:
+        List of =-separated key value pairs that describe the path from the html element to 'parent'.
+
+        config:
+        Json containing the configuration for the action.
+
+        driver:
+        The web driver.
+        """
         try:
             type = config['type'].strip()
         except KeyError:
@@ -110,6 +139,17 @@ class SeleniumScraper():
                 self._apply_action_to_elem(elem, lineage, action, driver)
 
     def _build_element_list(self, parent: WebElement, children: List[str]) -> List[WebElement]:
+        """
+        Gets all elements that fullfill the description in the last entry of 'children'. At the same time, for all
+        other entries only the first match is taken, though. Consequently, all elements returns have the same parent.
+
+        ----
+        parent:
+        Element the search starts from.
+
+        children:
+        Description how to look for children after children, generation for generation.
+        """
         # descent the lineage of descendants
         elem = self._traverse_children(parent, children[:-1])
 
