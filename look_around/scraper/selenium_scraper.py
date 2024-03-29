@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.remote.shadowroot import ShadowRoot
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.wait import WebDriverWait
@@ -115,6 +116,9 @@ class SeleniumScraper():
                 self._handling_action(config, driver)
             elif type == 'simple cookie dialog':
                 self._simple_cookie_dialog(parent, config, driver)
+            elif type == 'shadow child':
+                self._shadow_root_child_action(
+                    parent, ancestors, config, driver)
         except BaseException as be:
             print(be)
 
@@ -204,19 +208,17 @@ class SeleniumScraper():
         """
         children = config["children"]
         repeat = self._get_repeating(config)
-        while repeat == ck.AS_LONG_AS_POSSIBLE:
-            elem = self._traverse_children(parent, children)
-            elem.click()  # may raise exception once it is not possible anymore
-
-            # actions to be called on these elements
-            try:
-                actions = config['actions']
-            except KeyError:
-                # no further actions
-                return
-
-            for action in actions:
-                self._apply_action_to_driver(driver, action)
+        # while repeat == ck.AS_LONG_AS_POSSIBLE:
+        elem = self._traverse_children(parent, children)
+        elem.click()  # may raise exception once it is not possible anymore
+        # actions to be called on these elements
+        try:
+            actions = config['actions']
+        except KeyError:
+            # no further actions
+            return
+        for action in actions:
+            self._apply_action_to_driver(driver, action)
 
     def _sleep_action(self, config: Dict, driver: WebDriver) -> None:
         """
@@ -279,6 +281,40 @@ class SeleniumScraper():
         except BaseException:
             pass  # just return
 
+    def _shadow_root_child_action(self, parent: WebElement, ancestors: List, config: Dict, driver: WebDriver) -> None:
+        """
+        Gets the child of a shadow root.
+
+        ----
+        parent:
+        Element to look from.
+
+        ancestors:
+        ...
+
+        config:
+        Configuration of the action. The 'children' within the configuration must lead to the immediate parent of the shadow root.
+        The 'child' is the descendant of the shadow root (not necessarly a direct child) the follow up actions are applied to.
+
+        driver:
+        The web driver.
+        """
+        children = config[ck.CHILDREN]
+        child = config[ck.CHILD]
+        shadow_parent = self._traverse_children(parent, children)
+        shadow_root = shadow_parent.shadow_root
+        elem = self._get_shadow_root_child(shadow_root, child)
+
+        # actions to be called on the child
+        try:
+            actions = config['actions']
+        except KeyError:
+            # no further actions
+            return
+
+        for action in actions:
+            self._apply_action_to_elem(elem, ancestors, action, driver)
+
     # _______________  fun with cookie banners  _______________
 
     def _simple_cookie_dialog(self, parent: WebElement, config: Dict, driver: WebDriver) -> None:
@@ -289,14 +325,24 @@ class SeleniumScraper():
         except:
             wait_for = 10
 
-        elem = self._traverse_children(parent, children)
         wait = WebDriverWait(driver, timeout=wait_for)
-        wait.until(lambda _: self._is_interactible(elem))
+        wait.until(lambda _: self._is_interactible(parent, children, driver))
+        elem = self._traverse_children(parent, children)
 
         elem.click()
 
-    def _is_interactible(self, elem: WebElement) -> bool:
-        return elem.is_displayed() and elem.is_enabled()
+    def _is_interactible(self, parent: WebElement, children: List[str], driver) -> bool:
+        try:
+            elem = self._traverse_children(parent, children)
+            interactable = elem.is_displayed() and elem.is_enabled()
+            print(f'is interactable? {str(interactable)}')
+            return interactable
+        except BaseException as be:
+            print(be)
+            print(
+                f'error means that the element is not here - {str(random.random())}')
+            print()
+            return False
 
     # _______________  utilities  _______________
 
@@ -370,6 +416,45 @@ class SeleniumScraper():
                 val = val[:opn-1].strip()
                 elems = elem.find_elements(by, val)
                 elem = elems[idx]
+        return elem
+
+    def _get_shadow_root_child(self, parent: ShadowRoot, child: str) -> WebElement:
+        """
+        Gets a descendant from the shadow root. The child is described as a =-separated key value pair in 'child'.
+        The syntax is the same as for the 'children' in '_traverse_children'.
+
+        parent:
+        Shadow root of interest.
+
+        children:
+        Describes how to find the descendant.
+
+        returns:
+        The descendant.
+
+        raises:
+        ValueError if an antry in 'children' is badly formatted.
+
+        NoSuchElementException if a single child cannot be found.
+        """
+        kvp = child.strip().split('=')
+        if len(kvp) != 2 or len(kvp[0].strip()) == 0 or len(kvp[1].strip()) == 0:
+            raise ValueError(
+                f'key value pair {child.strip()} does not have exactly one non-empty key and one non-empty value separated by an equal sign (=), aborting.')
+        key = kvp[0].strip()
+        val = kvp[1].strip()
+        by = self._get_by(key)
+        if not val.endswith(']'):
+            # get first element
+            elem = parent.find_element(by, val)
+        else:
+            # the [x], x a number, is the index in an array and must be stripped from val and parsed
+            opn = val.rfind('[') + 1
+            cls = len(val) - 1
+            idx = int(val[opn:cls])
+            val = val[:opn-1].strip()
+            elems = parent.find_elements(by, val)
+            elem = elems[idx]
         return elem
 
     def _get_repeating(self, config: Dict) -> str:

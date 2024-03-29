@@ -6,6 +6,8 @@ CHILDREN = 'children'
 """Typically a list of identifiers that breadcrumbs a path through the DOM to a certain element."""
 REPEAT = 'repeat'
 """The repeat mode."""
+CHILD = 'child'
+"""A special child the follow up actions are applied to."""
 
 # _______________  values  _______________
 NO = 'no'
